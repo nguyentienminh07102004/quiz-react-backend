@@ -2,8 +2,8 @@ package com.ptitb22dccn539.quiz.Controller;
 
 import com.ptitb22dccn539.quiz.Exceptions.DataInvalidException;
 import com.ptitb22dccn539.quiz.Model.DTO.UserDTO;
-import com.ptitb22dccn539.quiz.Model.Request.UserLoginRequest;
-import com.ptitb22dccn539.quiz.Model.Request.UserUpdate;
+import com.ptitb22dccn539.quiz.Model.Request.User.UserLoginRequest;
+import com.ptitb22dccn539.quiz.Model.Request.User.UserUpdate;
 import com.ptitb22dccn539.quiz.Model.Response.APIResponse;
 import com.ptitb22dccn539.quiz.Model.Response.UserResponse;
 import com.ptitb22dccn539.quiz.Service.IUserService;

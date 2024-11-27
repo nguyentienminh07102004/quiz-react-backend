@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.text.DecimalFormat;
+
 @Configuration
 public class BeanAppConfig {
     @Bean
@@ -20,5 +22,9 @@ public class BeanAppConfig {
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
+    }
+    @Bean
+    public DecimalFormat decimalFormat() {
+        return new DecimalFormat("#.##");
     }
 }

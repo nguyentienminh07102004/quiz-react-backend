@@ -4,6 +4,7 @@ import com.ptitb22dccn539.quiz.Convertors.CategoryConvertor;
 import com.ptitb22dccn539.quiz.Exceptions.DataInvalidException;
 import com.ptitb22dccn539.quiz.Model.DTO.CategoryDTO;
 import com.ptitb22dccn539.quiz.Model.Entity.CategoryEntity;
+import com.ptitb22dccn539.quiz.Model.Request.Category.CategoryRating;
 import com.ptitb22dccn539.quiz.Model.Response.CategoryResponse;
 import com.ptitb22dccn539.quiz.Repositoty.ICategoryRepository;
 import com.ptitb22dccn539.quiz.Service.ICategoryService;
@@ -16,6 +17,7 @@ import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 @Service
@@ -23,6 +25,7 @@ import java.util.List;
 public class CategoryServiceImpl implements ICategoryService {
     private final ICategoryRepository categoryRepository;
     private final CategoryConvertor categoryConvertor;
+    private final DecimalFormat format;
 
     @Override
     @Transactional
@@ -70,5 +73,16 @@ public class CategoryServiceImpl implements ICategoryService {
         return list.stream()
                 .map(categoryConvertor::entityToResponse)
                 .toList();
+    }
+
+    @Override
+    public CategoryResponse ratingQuestion(CategoryRating categoryRating) {
+        String categoryCode = categoryRating.getCategoryCode();
+        CategoryEntity category = this.getCategoryEntityByCode(categoryCode);
+        Double rating = category.getRating() * category.getNumsOfRatings() + categoryRating.getRating();
+        category.setNumsOfRatings(category.getNumsOfRatings() + 1);
+        category.setRating(Double.valueOf(format.format(rating / category.getNumsOfRatings())));
+        CategoryEntity savedCategory = categoryRepository.save(category);
+        return categoryConvertor.entityToResponse(savedCategory);
     }
 }

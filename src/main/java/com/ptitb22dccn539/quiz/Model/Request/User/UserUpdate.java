@@ -1,4 +1,4 @@
-package com.ptitb22dccn539.quiz.Model.Request;
+package com.ptitb22dccn539.quiz.Model.Request.User;
 
 import lombok.Getter;
 import lombok.Setter;

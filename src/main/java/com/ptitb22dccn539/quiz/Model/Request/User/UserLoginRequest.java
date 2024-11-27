@@ -1,4 +1,4 @@
-package com.ptitb22dccn539.quiz.Model.Request;
+package com.ptitb22dccn539.quiz.Model.Request.User;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

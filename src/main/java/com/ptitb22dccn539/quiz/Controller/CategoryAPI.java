@@ -1,6 +1,7 @@
 package com.ptitb22dccn539.quiz.Controller;
 
 import com.ptitb22dccn539.quiz.Model.DTO.CategoryDTO;
+import com.ptitb22dccn539.quiz.Model.Request.Category.CategoryRating;
 import com.ptitb22dccn539.quiz.Model.Response.APIResponse;
 import com.ptitb22dccn539.quiz.Model.Response.CategoryResponse;
 import com.ptitb22dccn539.quiz.Service.ICategoryService;
@@ -8,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,7 +60,7 @@ public class CategoryAPI {
 
     @GetMapping(value = "/")
     @ResponseStatus(value = HttpStatus.OK)
-    public APIResponse getAllCategory(@RequestParam(required = false) Integer page) {
+    public APIResponse getAllCategories(@RequestParam(required = false) Integer page) {
         PagedModel<CategoryResponse> list = categoryService.getAllCategory(page);
         return APIResponse.builder()
                 .message("SUCCESS")
@@ -67,11 +69,23 @@ public class CategoryAPI {
     }
 
     @GetMapping(value = "/all")
-    public APIResponse getAllCategoryNoPagination() {
+    @ResponseStatus(value = HttpStatus.OK)
+    public APIResponse getAllCategories() {
         List<CategoryResponse> responses = categoryService.getAllNoPagination();
         return APIResponse.builder()
                 .message("SUCCESS")
                 .response(responses)
                 .build();
+    }
+
+    @PutMapping(value = "/rate")
+    @ResponseStatus(value = HttpStatus.OK)
+    public ResponseEntity<APIResponse> ratingQuestion(@RequestBody CategoryRating categoryRating) {
+        CategoryResponse categoryResponse = categoryService.ratingQuestion(categoryRating);
+        APIResponse response = APIResponse.builder()
+                .message("SUCCESS")
+                .response(categoryResponse)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

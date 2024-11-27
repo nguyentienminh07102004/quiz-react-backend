@@ -1,9 +1,9 @@
 package com.ptitb22dccn539.quiz.Service;
 
 import com.ptitb22dccn539.quiz.Model.DTO.UserDTO;
-import com.ptitb22dccn539.quiz.Model.Request.UserChangePassword;
-import com.ptitb22dccn539.quiz.Model.Request.UserLoginRequest;
-import com.ptitb22dccn539.quiz.Model.Request.UserUpdate;
+import com.ptitb22dccn539.quiz.Model.Request.User.UserChangePassword;
+import com.ptitb22dccn539.quiz.Model.Request.User.UserLoginRequest;
+import com.ptitb22dccn539.quiz.Model.Request.User.UserUpdate;
 import com.ptitb22dccn539.quiz.Model.Response.UserResponse;
 
 import java.util.List;

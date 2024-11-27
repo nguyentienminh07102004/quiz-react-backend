@@ -5,7 +5,7 @@ import com.ptitb22dccn539.quiz.Exceptions.ServerErrorException;
 import com.ptitb22dccn539.quiz.Model.DTO.UserDTO;
 import com.ptitb22dccn539.quiz.Model.Entity.RoleEntity;
 import com.ptitb22dccn539.quiz.Model.Entity.UserEntity;
-import com.ptitb22dccn539.quiz.Model.Request.UserUpdate;
+import com.ptitb22dccn539.quiz.Model.Request.User.UserUpdate;
 import com.ptitb22dccn539.quiz.Model.Response.UserResponse;
 import com.ptitb22dccn539.quiz.Repositoty.IRoleRepository;
 import com.ptitb22dccn539.quiz.enums.UserStatus;
