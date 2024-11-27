@@ -81,7 +81,7 @@ public class CategoryAPI {
     @PutMapping(value = "/rate")
     @ResponseStatus(value = HttpStatus.OK)
     public ResponseEntity<APIResponse> ratingQuestion(@RequestBody CategoryRating categoryRating) {
-        CategoryResponse categoryResponse = categoryService.ratingQuestion(categoryRating);
+        CategoryResponse categoryResponse = categoryService.rating(categoryRating);
         APIResponse response = APIResponse.builder()
                 .message("SUCCESS")
                 .response(categoryResponse)

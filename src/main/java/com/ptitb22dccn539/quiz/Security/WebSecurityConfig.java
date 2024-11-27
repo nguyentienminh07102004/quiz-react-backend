@@ -6,6 +6,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.ptitb22dccn539.quiz.Exceptions.DataInvalidException;
 import com.ptitb22dccn539.quiz.Model.Response.APIResponse;
 import com.ptitb22dccn539.quiz.Repositoty.JwtTokenRepository;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +27,14 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -47,35 +50,41 @@ public class WebSecurityConfig {
     private final JwtTokenRepository jwtTokenRepository;
     private final ObjectMapper objectMapper;
 
-    private final String[] URL_PUBLIC_POST = {
-            "/api/users/login",
-            "/api/users/register",
-    };
+    private String[] URL_PUBLIC_POST;
 
-    private final String[] URL_PUBLIC_GET = {
-            "/images/",
-            "/api/categories/all",
-            "/api/categories/",
-            "/api/tests/all",
-            "/api/tests/"
-    };
+    private String[] URL_PUBLIC_GET;
+
+    @PostConstruct
+    private void setURLPublic() {
+        URL_PUBLIC_GET = new String[]{
+                "/images/",
+                String.format("/%s/categories/all", API_PREFIX),
+                String.format("/%s/categories/", API_PREFIX),
+                String.format("/%s/tests/all", API_PREFIX),
+                String.format("/%s/tests/", API_PREFIX)
+        };
+        URL_PUBLIC_POST = new String[]{
+                "/%s/users/login".formatted(API_PREFIX),
+                "/%s/users/register".formatted(API_PREFIX),
+        };
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        System.out.println(Arrays.stream(URL_PUBLIC_GET).toList());
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request ->
-                        request.requestMatchers(HttpMethod.POST, "/api/users/login",
-                                        "/api/users/register",
-                                        "/api/users/logout").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/images/**",
-                                        "/api/categories/**",
-                                        "/api/tests/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/%s/users/logout".formatted(API_PREFIX)).hasAnyRole("USER", "ADMIN")
+                        request.requestMatchers(HttpMethod.POST, URL_PUBLIC_POST)
+                                .permitAll()
+                                .requestMatchers(HttpMethod.GET, URL_PUBLIC_GET)
+                                .permitAll()
+                                .requestMatchers(HttpMethod.POST, "/%s/users/logout".formatted(API_PREFIX)).access(new WebExpressionAuthorizationManager("not isAnonymous()"))
                                 .requestMatchers(HttpMethod.POST, "/%s/categories/**".formatted(API_PREFIX)).hasAuthority("ROLE_ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/%s/categories/**".formatted(API_PREFIX)).hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.DELETE, "/%s/categories/**".formatted(API_PREFIX)).hasAuthority("ROLE_ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/%s/test-detail/".formatted(API_PREFIX)).hasRole("USER")
+                                .requestMatchers(HttpMethod.PUT, "/%s/categories/rate".formatted(API_PREFIX)).access(new WebExpressionAuthorizationManager("not isAnonymous()"))
                                 .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> {
                     // có check het han duoc

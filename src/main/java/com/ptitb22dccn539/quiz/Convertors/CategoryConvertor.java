@@ -21,13 +21,7 @@ public class CategoryConvertor implements IConvertor<CategoryDTO, CategoryEntity
 
     @Override
     public CategoryResponse entityToResponse(CategoryEntity category) {
-        CategoryResponse categoryResponse = modelMapper.map(category, CategoryResponse.class);
-        if(categoryResponse.getNumsOfRatings() != 0) {
-            categoryResponse.setRate(category.getRating() / categoryResponse.getNumsOfRatings());
-        } else {
-            categoryResponse.setRate(0.0);
-        }
-        return categoryResponse;
+        return modelMapper.map(category, CategoryResponse.class);
     }
 
     @Override

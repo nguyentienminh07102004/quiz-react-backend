@@ -76,7 +76,7 @@ public class CategoryServiceImpl implements ICategoryService {
     }
 
     @Override
-    public CategoryResponse ratingQuestion(CategoryRating categoryRating) {
+    public CategoryResponse rating(CategoryRating categoryRating) {
         String categoryCode = categoryRating.getCategoryCode();
         CategoryEntity category = this.getCategoryEntityByCode(categoryCode);
         Double rating = category.getRating() * category.getNumsOfRatings() + categoryRating.getRating();

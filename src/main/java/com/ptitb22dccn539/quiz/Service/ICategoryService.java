@@ -15,5 +15,5 @@ public interface ICategoryService {
     CategoryResponse getCategoryResponseByCode(String id);
     PagedModel<CategoryResponse> getAllCategory(Integer page);
     List<CategoryResponse> getAllNoPagination();
-    CategoryResponse ratingQuestion(CategoryRating categoryRating);
+    CategoryResponse rating(CategoryRating categoryRating);
 }

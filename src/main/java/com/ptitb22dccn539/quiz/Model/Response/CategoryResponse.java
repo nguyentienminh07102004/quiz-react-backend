@@ -16,5 +16,5 @@ public class CategoryResponse {
     private String name;
     private String description;
     private Long numsOfRatings;
-    private Double rate;
+    private Double rating;
 }
