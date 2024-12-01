@@ -40,4 +40,10 @@ public class TestEntity extends BaseEntity {
     joinColumns = @JoinColumn(name = "test_id"),
     inverseJoinColumns = @JoinColumn(name = "question_id"))
     private List<QuestionEntity> questions;
+
+    @ManyToMany
+    @JoinTable(name = "test_category",
+    joinColumns = @JoinColumn(name = "test_id"),
+    inverseJoinColumns = @JoinColumn(name = "category_code"))
+    private List<CategoryEntity> categories;
 }

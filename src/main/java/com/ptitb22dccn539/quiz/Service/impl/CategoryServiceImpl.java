@@ -17,6 +17,7 @@ import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -30,11 +31,15 @@ public class CategoryServiceImpl implements ICategoryService {
     @Override
     @Transactional
     public CategoryResponse save(CategoryDTO categoryDTO) {
-        if(categoryDTO.getId() != null) {
-            categoryRepository.findById(categoryDTO.getId())
+        if (categoryDTO.getCode() != null) {
+            categoryRepository.findById(categoryDTO.getCode())
                     .orElseThrow(() -> new DataInvalidException("Category not found!"));
         }
         CategoryEntity category = categoryConvertor.dtoToEntity(categoryDTO);
+        if(categoryDTO.getCode() == null) {
+            categoryRepository.findByCode(category.getCode())
+                    .ifPresent(getByCode -> category.setCode(String.join("-", category.getCode(), new Date(System.currentTimeMillis()).toString())));
+        }
         CategoryEntity savedCategory = categoryRepository.save(category);
         return categoryConvertor.entityToResponse(savedCategory);
     }
@@ -60,7 +65,7 @@ public class CategoryServiceImpl implements ICategoryService {
 
     @Override
     public PagedModel<CategoryResponse> getAllCategory(Integer page) {
-        if(page == null) page = 1;
+        if (page == null) page = 1;
         Sort sort = Sort.by("rating");
         Pageable pageable = PageRequest.of(page - 1, 5, sort);
         Page<CategoryEntity> list = categoryRepository.findAll(pageable);

@@ -16,6 +16,7 @@ import lombok.Setter;
 public class AnswerDTO {
     private String id;
     @NotBlank(message = "Answer content not null or empty!")
+    @NotNull(message = "Answer content not null or empty!")
     private String content;
     @NotNull(message = "Answer check isCorrect is not null!")
     private Boolean isCorrect;

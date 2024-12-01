@@ -22,4 +22,5 @@ public class TestResponse {
     private Long numsOfRatings;
     private List<QuestionResponse> questionResponses;
     private Difficulty difficulty;
+    private String categories;
 }

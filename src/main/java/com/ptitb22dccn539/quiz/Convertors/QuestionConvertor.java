@@ -23,18 +23,18 @@ public class QuestionConvertor implements IConvertor<QuestionDTO, QuestionEntity
     @Override
     public QuestionEntity dtoToEntity(QuestionDTO dto) {
         QuestionEntity questionEntity = modelMapper.map(dto, QuestionEntity.class);
-        questionEntity.setRating(0.0);
-        questionEntity.setNumsOfRatings(0L);
+        if(dto.getId() == null) {
+            questionEntity.setRating(0.0);
+            questionEntity.setNumsOfRatings(0L);
+        }
         if(!dto.getCategoryCode().isBlank()) {
             CategoryEntity category = categoryService.getCategoryEntityByCode(dto.getCategoryCode());
             questionEntity.setCategory(category);
         }
-        if(dto.getAnswers() != null) {
-            List<AnswerEntity> answers = dto.getAnswers().stream()
-                    .map(item -> answerConvertor.dtoToEntity(item, questionEntity))
-                    .toList();
-            questionEntity.setAnswers(answers);
-        }
+        List<AnswerEntity> answers = dto.getAnswers().stream()
+                .map(item -> answerConvertor.dtoToEntity(item, questionEntity))
+                .toList();
+        questionEntity.setAnswers(answers);
         return questionEntity;
     }
 
@@ -49,11 +49,6 @@ public class QuestionConvertor implements IConvertor<QuestionDTO, QuestionEntity
                     .map(answerConvertor::entityToResponse)
                     .toList();
             questionResponse.setAnswers(answers);
-        }
-        if(entity.getNumsOfRatings() != 0) {
-            questionResponse.setRate(entity.getRating() / entity.getNumsOfRatings());
-        } else {
-            questionResponse.setRate(0.0);
         }
         return questionResponse;
     }

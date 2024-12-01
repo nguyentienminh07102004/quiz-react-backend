@@ -2,6 +2,8 @@ package com.ptitb22dccn539.quiz.Service;
 
 import com.ptitb22dccn539.quiz.Model.DTO.TestDTO;
 import com.ptitb22dccn539.quiz.Model.Entity.TestEntity;
+import com.ptitb22dccn539.quiz.Model.Request.Test.TestRating;
+import com.ptitb22dccn539.quiz.Model.Request.Test.TestSearch;
 import com.ptitb22dccn539.quiz.Model.Response.TestResponse;
 import org.springframework.data.web.PagedModel;
 
@@ -13,4 +15,6 @@ public interface ITestService {
     TestEntity getTestEntityById(String id);
     TestResponse getTestResponseById(String id);
     PagedModel<TestResponse> getAllTests(Integer page);
+    PagedModel<TestResponse> getAllTests(TestSearch testSearch);
+    TestResponse rating(TestRating testRating);
 }

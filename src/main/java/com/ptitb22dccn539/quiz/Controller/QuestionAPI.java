@@ -1,14 +1,18 @@
 package com.ptitb22dccn539.quiz.Controller;
 
 import com.ptitb22dccn539.quiz.Model.DTO.QuestionDTO;
+import com.ptitb22dccn539.quiz.Model.Request.Question.QuestionRating;
 import com.ptitb22dccn539.quiz.Model.Response.APIResponse;
 import com.ptitb22dccn539.quiz.Model.Response.QuestionResponse;
 import com.ptitb22dccn539.quiz.Service.IQuestionService;
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,6 +55,7 @@ public class QuestionAPI {
 
     @GetMapping(value = "/")
     @ResponseStatus(value = HttpStatus.OK)
+    @PermitAll
     public APIResponse getAllQuestions(@RequestParam(required = false) Integer page) {
         PagedModel<QuestionResponse> questionResponsePagedModel = questionService.getAllQuestions(page);
         return APIResponse.builder()
@@ -60,6 +65,8 @@ public class QuestionAPI {
     }
 
     @GetMapping(value = "/{id}")
+    @ResponseStatus(value = HttpStatus.OK)
+    @PermitAll
     public APIResponse getQuestionById(@PathVariable String id) {
         QuestionResponse questionResponse = questionService.getQuestionResponseById(id);
         return APIResponse.builder()
@@ -69,11 +76,46 @@ public class QuestionAPI {
     }
 
     @GetMapping(value = "/all")
+    @ResponseStatus(value = HttpStatus.OK)
+    @PermitAll
     public APIResponse getAllQuestionsNoPagination() {
         List<QuestionResponse> list = questionService.getAllQuestions();
         return APIResponse.builder()
                 .message("SUCCESS")
                 .response(list)
                 .build();
+    }
+
+    @PutMapping(value = "/rate")
+    @PreAuthorize(value = "not isAnonymous()")
+    public ResponseEntity<APIResponse> rating(@Valid @RequestBody QuestionRating questionRating) {
+        QuestionResponse questionResponse = questionService.rating(questionRating);
+        APIResponse response = APIResponse.builder()
+                .message("SUCCESS")
+                .response(questionResponse)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @DeleteMapping(value = "/{ids}")
+    @PreAuthorize(value = "hasRole('ADMIN')")
+    public ResponseEntity<APIResponse> deleteByIds(@PathVariable List<String> ids) {
+        questionService.deleteByIds(ids);
+        APIResponse response = APIResponse.builder()
+                .response("SUCCESS")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @DeleteMapping(value = "/")
+    @PreAuthorize(value = "hasRole('ADMIN')")
+    public ResponseEntity<APIResponse> deleteAnswersByIds(@RequestBody List<String> ids,
+                                                          @RequestParam String questionId) {
+        QuestionResponse questionResponse = questionService.deleteAnswersById(questionId, ids);
+        APIResponse response = APIResponse.builder()
+                .message("SUCCESS")
+                .response(questionResponse)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

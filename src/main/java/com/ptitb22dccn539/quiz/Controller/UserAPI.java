@@ -1,6 +1,5 @@
 package com.ptitb22dccn539.quiz.Controller;
 
-import com.ptitb22dccn539.quiz.Exceptions.DataInvalidException;
 import com.ptitb22dccn539.quiz.Model.DTO.UserDTO;
 import com.ptitb22dccn539.quiz.Model.Request.User.UserLoginRequest;
 import com.ptitb22dccn539.quiz.Model.Request.User.UserUpdate;
@@ -13,7 +12,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,10 +32,7 @@ public class UserAPI {
 
     @PostMapping(value = "/register")
     @ResponseStatus(value = HttpStatus.CREATED)
-    public APIResponse saveUser(@Valid @RequestBody UserDTO userDTO, BindingResult bindingResult) {
-        if (bindingResult.hasFieldErrors()) {
-            throw new DataInvalidException(bindingResult.getFieldError().getDefaultMessage());
-        }
+    public APIResponse saveUser(@Valid @RequestBody UserDTO userDTO) {
         UserResponse userResponse = userService.save(userDTO);
         return APIResponse.builder()
                 .message("CREATE SUCCESS")
@@ -58,7 +53,7 @@ public class UserAPI {
 
     @PostMapping(value = "/login")
     @ResponseStatus(value = HttpStatus.OK)
-    public APIResponse login(@Valid @RequestBody UserLoginRequest userLoginRequest, BindingResult bindingResult, HttpServletResponse httpServletResponse) {
+    public APIResponse login(@Valid @RequestBody UserLoginRequest userLoginRequest, HttpServletResponse httpServletResponse) {
         String token = userService.login(userLoginRequest);
         Cookie cookie = new Cookie("token", token);
         cookie.setHttpOnly(true);

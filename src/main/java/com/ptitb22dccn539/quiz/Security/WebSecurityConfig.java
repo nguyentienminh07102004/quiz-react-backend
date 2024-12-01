@@ -15,10 +15,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManagerResolver;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -28,18 +30,18 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
+import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(jsr250Enabled = true)
 @RequiredArgsConstructor
 public class WebSecurityConfig {
     @Value(value = "${jwt.SIGNER_KEY}")
@@ -61,7 +63,8 @@ public class WebSecurityConfig {
                 String.format("/%s/categories/all", API_PREFIX),
                 String.format("/%s/categories/", API_PREFIX),
                 String.format("/%s/tests/all", API_PREFIX),
-                String.format("/%s/tests/", API_PREFIX)
+                String.format("/%s/tests/", API_PREFIX),
+                String.format("/%s/mail/", API_PREFIX)
         };
         URL_PUBLIC_POST = new String[]{
                 "/%s/users/login".formatted(API_PREFIX),
@@ -71,7 +74,6 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        System.out.println(Arrays.stream(URL_PUBLIC_GET).toList());
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request ->
@@ -83,8 +85,10 @@ public class WebSecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/%s/categories/**".formatted(API_PREFIX)).hasAuthority("ROLE_ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/%s/categories/**".formatted(API_PREFIX)).hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.DELETE, "/%s/categories/**".formatted(API_PREFIX)).hasAuthority("ROLE_ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/%s/test-detail/".formatted(API_PREFIX)).hasRole("USER")
-                                .requestMatchers(HttpMethod.PUT, "/%s/categories/rate".formatted(API_PREFIX)).access(new WebExpressionAuthorizationManager("not isAnonymous()"))
+                                .requestMatchers("/%s/test-detail**".formatted(API_PREFIX)).permitAll()
+                                .requestMatchers(RegexRequestMatcher.regexMatcher(HttpMethod.PUT, "/%s/(categories|questions|tests)/rate".formatted(API_PREFIX))).access(new WebExpressionAuthorizationManager("not isAnonymous()"))
+                                .requestMatchers("/%s/questions**".formatted(API_PREFIX)).permitAll()
+                                .requestMatchers(HttpMethod.GET, "/%s/tests/**".formatted(API_PREFIX)).permitAll()
                                 .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> {
                     // có check het han duoc
@@ -186,11 +190,21 @@ public class WebSecurityConfig {
         return request -> {
             for (String uri : URL_PUBLIC_POST) {
                 if (request.getRequestURI().contains(uri) && request.getMethod().equals("POST"))
-                    return authentication -> authentication;
+                    return authentication -> {
+                        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken("Anonymous", null, List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
+                        token.setAuthenticated(false);
+                        return token;
+                    };
             }
             for (String uri : URL_PUBLIC_GET) {
-                if (request.getRequestURI().equals(uri) && request.getMethod().equals("GET"))
-                    return authentication -> authentication;
+                if (request.getRequestURI().contains(uri) && request.getMethod().equals("GET"))
+                    return authentication -> {
+                        UsernamePasswordAuthenticationToken token =
+                                new UsernamePasswordAuthenticationToken("Anonymous", null,
+                                        List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
+                        token.setAuthenticated(false);
+                        return token;
+                    };
             }
             JwtAuthenticationProvider provider = new JwtAuthenticationProvider(jwtDecoder());
             provider.setJwtAuthenticationConverter(jwtAuthenticationConverter());

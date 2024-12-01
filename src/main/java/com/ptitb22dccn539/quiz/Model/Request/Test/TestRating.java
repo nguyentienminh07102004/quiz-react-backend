@@ -1,4 +1,4 @@
-package com.ptitb22dccn539.quiz.Model.Request.Question;
+package com.ptitb22dccn539.quiz.Model.Request.Test;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -15,12 +15,12 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class QuestionRating {
+public class TestRating {
     @NotNull(message = "Rating is not null")
     @Min(value = 0, message = "Min rating is 0")
     @Max(value = 5, message = "Max rating is 5")
     private Double rating;
-    @NotNull(message = "QuestionId is not null or blank!")
-    @NotBlank(message = "QuestionId is not null or blank!")
-    private String questionId;
+    @NotNull(message = "TestId is not null or blank!")
+    @NotBlank(message = "TestId is not null or blank!")
+    private String testId;
 }

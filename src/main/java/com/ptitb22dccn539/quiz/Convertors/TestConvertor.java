@@ -1,6 +1,7 @@
 package com.ptitb22dccn539.quiz.Convertors;
 
 import com.ptitb22dccn539.quiz.Model.DTO.TestDTO;
+import com.ptitb22dccn539.quiz.Model.Entity.CategoryEntity;
 import com.ptitb22dccn539.quiz.Model.Entity.QuestionEntity;
 import com.ptitb22dccn539.quiz.Model.Entity.TestEntity;
 import com.ptitb22dccn539.quiz.Model.Response.QuestionResponse;
@@ -12,6 +13,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -40,11 +42,15 @@ public class TestConvertor implements IConvertor<TestDTO, TestEntity, TestRespon
     public TestResponse entityToResponse(TestEntity entity) {
         TestResponse testResponse = modelMapper.map(entity, TestResponse.class);
         if(entity.getNumsOfRatings() == 0) testResponse.setRate(0.0);
-        else testResponse.setRate(entity.getRating() / entity.getNumsOfRatings());
+        else testResponse.setRate(entity.getRating());
         List<QuestionResponse> questionResponses = entity.getQuestions().stream()
                 .map(questionConvertor::entityToResponse)
                 .toList();
         testResponse.setQuestionResponses(questionResponses);
+        String categories = entity.getCategories().stream()
+                .map(CategoryEntity::getName)
+                .collect(Collectors.joining(", "));
+        testResponse.setCategories(categories);
         return testResponse;
     }
 }

@@ -1,6 +1,8 @@
 package com.ptitb22dccn539.quiz.Model.DTO;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,5 +23,7 @@ public class QuestionDTO {
     private String categoryCode;
     private String title;
     private String shortDescription;
+    @NotNull
+    @NotEmpty
     private List<AnswerDTO> answers;
 }

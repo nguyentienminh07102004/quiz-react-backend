@@ -20,6 +20,6 @@ public class QuestionResponse {
     private String category;
     private String content;
     private Long numsOfRatings;
-    private Double rate;
+    private Double rating;
     private List<AnswerResponse> answers;
 }

@@ -8,6 +8,7 @@ import com.ptitb22dccn539.quiz.Model.DTO.AnswerDTO;
 import com.ptitb22dccn539.quiz.Model.DTO.QuestionDTO;
 import com.ptitb22dccn539.quiz.Model.Entity.AnswerEntity;
 import com.ptitb22dccn539.quiz.Model.Entity.QuestionEntity;
+import com.ptitb22dccn539.quiz.Model.Request.Question.QuestionRating;
 import com.ptitb22dccn539.quiz.Model.Response.QuestionResponse;
 import com.ptitb22dccn539.quiz.Repositoty.IAnswerRepository;
 import com.ptitb22dccn539.quiz.Repositoty.IQuestionRepository;
@@ -20,6 +21,7 @@ import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 @Service
@@ -29,11 +31,12 @@ public class QuestionServiceImpl implements IQuestionService {
     private final QuestionConvertor questionConvertor;
     private final AnswerConvertor answerConvertor;
     private final IAnswerRepository answerRepository;
+    private final DecimalFormat format;
 
     @Override
     @Transactional
     public QuestionResponse save(QuestionDTO questionDTO) {
-        if(questionDTO.getId() != null) {
+        if (questionDTO.getId() != null) {
             questionRepository.findById(questionDTO.getId())
                     .orElseThrow(() -> new DataInvalidException("Question not found!"));
             questionDTO.getAnswers().stream()
@@ -41,6 +44,12 @@ public class QuestionServiceImpl implements IQuestionService {
                     .filter(StringUtil::notNullNorEmpty)
                     .forEach(id -> answerRepository.findById(id)
                             .orElseThrow(() -> new DataInvalidException("Answer not found!")));
+        }
+        List<AnswerDTO> answerCorrects = questionDTO.getAnswers().stream()
+                .filter(AnswerDTO::getIsCorrect)
+                .toList();
+        if(answerCorrects.isEmpty()) {
+            throw new DataInvalidException("The question must have at least 1 correct answer!");
         }
         QuestionEntity question = questionConvertor.dtoToEntity(questionDTO);
         QuestionEntity response = questionRepository.save(question);
@@ -57,25 +66,34 @@ public class QuestionServiceImpl implements IQuestionService {
 
     @Override
     @Transactional
-    public void deleteAnswersById(String questionId, List<String> answerIds) {
-        QuestionEntity question = this.getQuestionEntityById(questionId);
-        question.getAnswers().stream()
-                .filter(answer -> answerIds.contains(answer.getId()))
-                .forEach(answer -> answer.setQuestion(null));
-        questionRepository.save(question);
+    public QuestionResponse deleteAnswersById(String questionId, List<String> answerIds) {
+        try {
+            QuestionEntity question = this.getQuestionEntityById(questionId);
+            for (String answerId : answerIds) {
+                AnswerEntity answer = answerRepository.findById(answerId)
+                        .orElseThrow(() -> new DataInvalidException("Answer not found!"));
+                answer.setQuestion(null);
+                question.getAnswers().remove(answer);
+            }
+            QuestionEntity response = questionRepository.save(question);
+            return questionConvertor.entityToResponse(response);
+        } catch (Exception exception) {
+            throw new DataInvalidException("This answer is referencing another test! Please delete those tests before deleting this answer!");
+        }
     }
 
     @Override
     public QuestionResponse addAnswerToQuestion(String questionId, List<AnswerDTO> answers) {
-        QuestionEntity question = this.getQuestionEntityById(questionId);
-        if(answers != null) {
+        if (answers != null && !answers.isEmpty()) {
+            QuestionEntity question = this.getQuestionEntityById(questionId);
             List<AnswerEntity> answerEntityList = answers.stream()
                     .map(item -> answerConvertor.dtoToEntity(item, question))
                     .toList();
-            question.setAnswers(answerEntityList);
+            question.getAnswers().addAll(answerEntityList);
+            QuestionEntity questionEntity = questionRepository.save(question);
+            return questionConvertor.entityToResponse(questionEntity);
         }
-        QuestionEntity questionEntity = questionRepository.save(question);
-        return questionConvertor.entityToResponse(questionEntity);
+        throw new DataInvalidException("Answer not null or empty!");
     }
 
     @Override
@@ -91,7 +109,7 @@ public class QuestionServiceImpl implements IQuestionService {
 
     @Override
     public PagedModel<QuestionResponse> getAllQuestions(Integer page) {
-        if(page == null || page < 1) page = 1;
+        if (page == null || page < 1) page = 1;
         Pageable pageable = PageRequest.of(page - 1, 3);
         Page<QuestionEntity> entityPage = questionRepository.findAll(pageable);
         Page<QuestionResponse> responses = entityPage.map(questionConvertor::entityToResponse);
@@ -104,5 +122,15 @@ public class QuestionServiceImpl implements IQuestionService {
         return list.stream()
                 .map(questionConvertor::entityToResponse)
                 .toList();
+    }
+
+    @Override
+    public QuestionResponse rating(QuestionRating questionRating) {
+        QuestionEntity questionEntity = this.getQuestionEntityById(questionRating.getQuestionId());
+        Double rating = questionEntity.getRating() * questionEntity.getNumsOfRatings() + questionRating.getRating();
+        questionEntity.setNumsOfRatings(questionEntity.getNumsOfRatings() + 1);
+        questionEntity.setRating(Double.valueOf(format.format(rating / questionEntity.getNumsOfRatings())));
+        QuestionEntity response = questionRepository.save(questionEntity);
+        return questionConvertor.entityToResponse(response);
     }
 }

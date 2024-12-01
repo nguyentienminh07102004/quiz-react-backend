@@ -13,8 +13,6 @@ import com.nimbusds.jwt.SignedJWT;
 import com.ptitb22dccn539.quiz.Exceptions.DataInvalidException;
 import com.ptitb22dccn539.quiz.Model.Entity.RoleEntity;
 import com.ptitb22dccn539.quiz.Model.Entity.UserEntity;
-import com.ptitb22dccn539.quiz.Repositoty.JwtTokenRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
@@ -25,11 +23,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public class JWTGenerator {
     @Value(value = "${jwt.SIGNER_KEY}")
     private String SIGNER_KEY;
-    private final JwtTokenRepository jwtTokenRepository;
 
     public Pair<String, String> generatorToken(UserEntity user) throws JOSEException {
         String roles = user.getRoles().stream()
