@@ -1,7 +1,6 @@
 package com.ptitb22dccn539.quiz.Controller;
 
 import com.ptitb22dccn539.quiz.Model.DTO.QuestionDTO;
-import com.ptitb22dccn539.quiz.Model.Request.Question.QuestionRating;
 import com.ptitb22dccn539.quiz.Model.Response.APIResponse;
 import com.ptitb22dccn539.quiz.Model.Response.QuestionResponse;
 import com.ptitb22dccn539.quiz.Service.IQuestionService;
@@ -84,17 +83,6 @@ public class QuestionAPI {
                 .message("SUCCESS")
                 .response(list)
                 .build();
-    }
-
-    @PutMapping(value = "/rate")
-    @PreAuthorize(value = "not isAnonymous()")
-    public ResponseEntity<APIResponse> rating(@Valid @RequestBody QuestionRating questionRating) {
-        QuestionResponse questionResponse = questionService.rating(questionRating);
-        APIResponse response = APIResponse.builder()
-                .message("SUCCESS")
-                .response(questionResponse)
-                .build();
-        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @DeleteMapping(value = "/{ids}")

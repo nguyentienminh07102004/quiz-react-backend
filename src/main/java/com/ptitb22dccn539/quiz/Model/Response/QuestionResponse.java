@@ -19,7 +19,5 @@ public class QuestionResponse {
     private String shortDescription;
     private String category;
     private String content;
-    private Long numsOfRatings;
-    private Double rating;
     private List<AnswerResponse> answers;
 }

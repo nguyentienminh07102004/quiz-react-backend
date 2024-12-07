@@ -24,8 +24,6 @@ public class CategoryConvertor implements IConvertor<CategoryDTO, CategoryEntity
         CategoryEntity categoryEntity = modelMapper.map(categoryDTO, CategoryEntity.class);
         if(categoryDTO.getCode() == null) {
             categoryEntity.setCode(this.generateCodeFromName(categoryDTO.getName()));
-            categoryEntity.setRating(0.0);
-            categoryEntity.setNumsOfRatings(0L);
         }
         return categoryEntity;
     }

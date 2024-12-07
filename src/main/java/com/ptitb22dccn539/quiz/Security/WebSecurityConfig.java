@@ -1,11 +1,7 @@
 package com.ptitb22dccn539.quiz.Security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.ptitb22dccn539.quiz.Exceptions.DataInvalidException;
 import com.ptitb22dccn539.quiz.Model.Response.APIResponse;
-import com.ptitb22dccn539.quiz.Repositoty.JwtTokenRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,9 +17,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
@@ -35,8 +29,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-import javax.crypto.spec.SecretKeySpec;
-import java.text.ParseException;
 import java.util.List;
 
 @Configuration
@@ -44,14 +36,10 @@ import java.util.List;
 @EnableMethodSecurity(jsr250Enabled = true)
 @RequiredArgsConstructor
 public class WebSecurityConfig {
-    @Value(value = "${jwt.SIGNER_KEY}")
-    private String SIGNER_KEY;
+    private final JwtDecoder jwtDecoder;
     @Value(value = "${api.prefix}")
     private String API_PREFIX;
-    private final JWTGenerator jwtGenerator;
-    private final JwtTokenRepository jwtTokenRepository;
     private final ObjectMapper objectMapper;
-
     private String[] URL_PUBLIC_POST;
 
     private String[] URL_PUBLIC_GET;
@@ -64,11 +52,17 @@ public class WebSecurityConfig {
                 String.format("/%s/categories/", API_PREFIX),
                 String.format("/%s/tests/all", API_PREFIX),
                 String.format("/%s/tests/", API_PREFIX),
-                String.format("/%s/mail/", API_PREFIX)
+                String.format("/%s/mail/", API_PREFIX),
+                String.format("/%s/test-detail/max-top/", API_PREFIX),
+                String.format("/%s/tests/related/", API_PREFIX),
+                "/oauth2/authorization/google",
+                "/oauth2/authorization/github"
         };
         URL_PUBLIC_POST = new String[]{
                 "/%s/users/login".formatted(API_PREFIX),
                 "/%s/users/register".formatted(API_PREFIX),
+                "/%s/users/login-google".formatted(API_PREFIX),
+                "/%s/users/login-github".formatted(API_PREFIX)
         };
     }
 
@@ -85,8 +79,10 @@ public class WebSecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/%s/categories/**".formatted(API_PREFIX)).hasAuthority("ROLE_ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/%s/categories/**".formatted(API_PREFIX)).hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.DELETE, "/%s/categories/**".formatted(API_PREFIX)).hasAuthority("ROLE_ADMIN")
-                                .requestMatchers("/%s/test-detail**".formatted(API_PREFIX)).permitAll()
+                                .requestMatchers(HttpMethod.POST, "/%s/test-detail/".formatted(API_PREFIX)).hasRole("USER")
+                                .requestMatchers(HttpMethod.GET, "/%s/test-detail/{id}".formatted(API_PREFIX)).access(new WebExpressionAuthorizationManager("not isAnonymous()"))
                                 .requestMatchers(RegexRequestMatcher.regexMatcher(HttpMethod.PUT, "/%s/(categories|questions|tests)/rate".formatted(API_PREFIX))).access(new WebExpressionAuthorizationManager("not isAnonymous()"))
+                                .requestMatchers(HttpMethod.GET, "/%s/test-detail/max-top/**".formatted(API_PREFIX)).permitAll()
                                 .requestMatchers("/%s/questions**".formatted(API_PREFIX)).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/%s/tests/**".formatted(API_PREFIX)).permitAll()
                                 .anyRequest().authenticated())
@@ -125,7 +121,6 @@ public class WebSecurityConfig {
                                     response.getWriter().flush();
                                 })
                 );
-//        httpSecurity.oauth2Login(AbstractAuthenticationFilterConfigurer::permitAll);
         return httpSecurity.build();
     }
 
@@ -136,26 +131,6 @@ public class WebSecurityConfig {
         authoritiesConverter.setAuthorityPrefix("ROLE_");
         converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
         return converter;
-    }
-
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        return token -> {
-            try {
-                JWTClaimsSet claimsSet = jwtGenerator.getClaimSet(token);
-                // jwt tu kiem tra het han chua
-                if (claimsSet.getJWTID() != null && !jwtTokenRepository.existsById(claimsSet.getJWTID())) {
-                    throw new DataInvalidException("Token is invalid!");
-                }
-                SecretKeySpec spec = new SecretKeySpec(SIGNER_KEY.getBytes(), "HS512");
-                return NimbusJwtDecoder.withSecretKey(spec)
-                        .macAlgorithm(MacAlgorithm.HS512)
-                        .build()
-                        .decode(token);
-            } catch (JOSEException | ParseException e) {
-                throw new DataInvalidException("Token is invalid");
-            }
-        };
     }
 
     @Bean
@@ -206,7 +181,7 @@ public class WebSecurityConfig {
                         return token;
                     };
             }
-            JwtAuthenticationProvider provider = new JwtAuthenticationProvider(jwtDecoder());
+            JwtAuthenticationProvider provider = new JwtAuthenticationProvider(jwtDecoder);
             provider.setJwtAuthenticationConverter(jwtAuthenticationConverter());
             return provider::authenticate;
         };

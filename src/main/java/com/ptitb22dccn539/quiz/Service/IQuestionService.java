@@ -18,5 +18,4 @@ public interface IQuestionService {
     QuestionResponse getQuestionResponseById(String id);
     PagedModel<QuestionResponse> getAllQuestions(Integer page);
     List<QuestionResponse> getAllQuestions();
-    QuestionResponse rating(QuestionRating questionRating);
 }

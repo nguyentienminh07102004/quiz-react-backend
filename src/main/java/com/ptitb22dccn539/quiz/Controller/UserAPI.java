@@ -2,15 +2,18 @@ package com.ptitb22dccn539.quiz.Controller;
 
 import com.ptitb22dccn539.quiz.Model.DTO.UserDTO;
 import com.ptitb22dccn539.quiz.Model.Request.User.UserLoginRequest;
+import com.ptitb22dccn539.quiz.Model.Request.User.UserLoginWithGithub;
+import com.ptitb22dccn539.quiz.Model.Request.User.UserLoginWithGoogle;
 import com.ptitb22dccn539.quiz.Model.Request.User.UserUpdate;
 import com.ptitb22dccn539.quiz.Model.Response.APIResponse;
 import com.ptitb22dccn539.quiz.Model.Response.UserResponse;
 import com.ptitb22dccn539.quiz.Service.IUserService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -54,12 +58,7 @@ public class UserAPI {
     @PostMapping(value = "/login")
     @ResponseStatus(value = HttpStatus.OK)
     public APIResponse login(@Valid @RequestBody UserLoginRequest userLoginRequest, HttpServletResponse httpServletResponse) {
-        String token = userService.login(userLoginRequest);
-        Cookie cookie = new Cookie("token", token);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(86400);
-        httpServletResponse.addCookie(cookie);
+        String token = userService.login(userLoginRequest, httpServletResponse);
         return APIResponse.builder()
                 .message("LOGIN SUCCESS")
                 .response(token)
@@ -92,5 +91,47 @@ public class UserAPI {
         return APIResponse.builder()
                 .message("LOGOUT SUCCESS")
                 .build();
+    }
+
+    @GetMapping(value = "/")
+    public ResponseEntity<APIResponse> getAllUsers(@RequestParam(required = false, defaultValue = "1") Integer page) {
+        PagedModel<UserResponse> list = userService.getAllUsers(page);
+        APIResponse response = APIResponse.builder()
+                .message("SUCCESS")
+                .response(list)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping(value = "/my-info")
+    public ResponseEntity<APIResponse> getMyInfo() {
+        UserResponse response = userService.getMyInfo();
+        APIResponse apiResponse = APIResponse.builder()
+                .message("SUCCESS")
+                .response(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
+
+    @PostMapping(value = "/login-google")
+    public ResponseEntity<APIResponse> loginWithGoogle(@Valid @RequestBody UserLoginWithGoogle loginWithGoogle,
+                                                       HttpServletResponse httpServletResponse) {
+        String token = userService.loginWithGoogle(loginWithGoogle, httpServletResponse);
+        APIResponse response = APIResponse.builder()
+                .message("SUCCESS")
+                .response(token)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping(value = "/login-github")
+    public ResponseEntity<APIResponse> loginWithGithub(@Valid @RequestBody UserLoginWithGithub loginWithGithub,
+                                                       HttpServletResponse httpServletResponse) {
+        String token = userService.loginWithGithub(loginWithGithub, httpServletResponse);
+        APIResponse response = APIResponse.builder()
+                .message("SUCCESS")
+                .response(token)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

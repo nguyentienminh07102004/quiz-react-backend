@@ -21,4 +21,5 @@ public class UserLoginRequest {
     @NotBlank(message = "Email or password is invalid!")
     @Size(min = 8, message = "Email or password is invalid!")
     private String password;
+    private Boolean loginSocial;
 }

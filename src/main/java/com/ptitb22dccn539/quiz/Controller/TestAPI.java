@@ -19,8 +19,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -69,5 +72,16 @@ public class TestAPI {
                 .response(response)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
+
+    @GetMapping(value = "/related/{testId}")
+    public ResponseEntity<APIResponse> getTestRelated(@RequestParam List<String> categories,
+                                                      @PathVariable String testId) {
+        List<TestResponse> list = testService.getTestRelated(testId, categories);
+        APIResponse response = APIResponse.builder()
+                .message("SUCCESS")
+                .response(list)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

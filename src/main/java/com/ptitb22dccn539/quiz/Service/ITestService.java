@@ -17,4 +17,6 @@ public interface ITestService {
     PagedModel<TestResponse> getAllTests(Integer page);
     PagedModel<TestResponse> getAllTests(TestSearch testSearch);
     TestResponse rating(TestRating testRating);
+    List<TestResponse> getAllTests();
+    List<TestResponse> getTestRelated(String testId, List<String> categories);
 }

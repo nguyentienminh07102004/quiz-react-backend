@@ -23,10 +23,6 @@ public class QuestionConvertor implements IConvertor<QuestionDTO, QuestionEntity
     @Override
     public QuestionEntity dtoToEntity(QuestionDTO dto) {
         QuestionEntity questionEntity = modelMapper.map(dto, QuestionEntity.class);
-        if(dto.getId() == null) {
-            questionEntity.setRating(0.0);
-            questionEntity.setNumsOfRatings(0L);
-        }
         if(!dto.getCategoryCode().isBlank()) {
             CategoryEntity category = categoryService.getCategoryEntityByCode(dto.getCategoryCode());
             questionEntity.setCategory(category);

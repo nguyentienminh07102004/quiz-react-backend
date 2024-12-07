@@ -32,10 +32,6 @@ public class QuestionEntity extends BaseEntity {
     private String shortDescription;
     @Column(name = "content", columnDefinition = "LONGTEXT")
     private String content;
-    @Column(name = "rating")
-    private Double rating;
-    @Column(name = "nums_of_rating")
-    private Long numsOfRatings;
 
     @ManyToOne
     @JoinColumn(name = "category_code", referencedColumnName = "code")

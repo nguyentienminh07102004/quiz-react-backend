@@ -123,14 +123,4 @@ public class QuestionServiceImpl implements IQuestionService {
                 .map(questionConvertor::entityToResponse)
                 .toList();
     }
-
-    @Override
-    public QuestionResponse rating(QuestionRating questionRating) {
-        QuestionEntity questionEntity = this.getQuestionEntityById(questionRating.getQuestionId());
-        Double rating = questionEntity.getRating() * questionEntity.getNumsOfRatings() + questionRating.getRating();
-        questionEntity.setNumsOfRatings(questionEntity.getNumsOfRatings() + 1);
-        questionEntity.setRating(Double.valueOf(format.format(rating / questionEntity.getNumsOfRatings())));
-        QuestionEntity response = questionRepository.save(questionEntity);
-        return questionConvertor.entityToResponse(response);
-    }
 }

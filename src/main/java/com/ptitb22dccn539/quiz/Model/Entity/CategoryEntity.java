@@ -23,10 +23,6 @@ public class CategoryEntity extends BaseEntity {
     private String code;
     @Column(name = "description", columnDefinition = "LONGTEXT")
     private String description;
-    @Column(name = "rating")
-    private Double rating;
-    @Column(name = "nums_of_rating")
-    private Long numsOfRatings;
 
     @OneToMany(mappedBy = "category")
     private List<QuestionEntity> questions;

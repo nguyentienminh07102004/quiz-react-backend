@@ -6,7 +6,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
@@ -20,18 +19,18 @@ public class TestRepositoryCustomerImpl implements TestRepositoryCustomer {
 
     @Override
     @SuppressWarnings(value = "unchecked")
-    public List<TestEntity> findTest(TestSearch testSearch) {
+    public List<TestEntity> findTest(TestSearch testSearch, Pageable pageable) {
         StringBuilder sql = new StringBuilder("SELECT * FROM Tests t WHERE 1 = 1 ");
-        if(!CollectionUtils.isEmpty(testSearch.getCategory())) {
-           sql.append(" AND EXISTS ( SELECT * FROM test_category WHERE category_code IN ( ").append(String.join(", ", testSearch.getCategory())).append(" ) ");
+        if (!CollectionUtils.isEmpty(testSearch.getCategory())) {
+            sql.append(" AND t.id IN ( SELECT test_category.test_id FROM test_category WHERE category_code IN ( ").append(String.join(", ", testSearch.getCategory().stream().map(item -> "'" + item + "'").toList())).append(" )) ");
         }
-        if(StringUtils.isNotBlank(testSearch.getTitle())) {
+        if (StringUtils.isNotBlank(testSearch.getTitle())) {
             sql.append(" AND t.title LIKE '%").append(testSearch.getTitle()).append("%' ");
         }
-        if(testSearch.getRating() != null) {
+        if (testSearch.getRating() != null) {
             sql.append(" AND t.rating >= ").append(testSearch.getRating());
         }
-        if(testSearch.getDifficulty() != null) {
+        if (testSearch.getDifficulty() != null) {
             int difficulty = switch (testSearch.getDifficulty()) {
                 case VERY_EASY -> 0;
                 case EASY -> 1;
@@ -41,11 +40,9 @@ public class TestRepositoryCustomerImpl implements TestRepositoryCustomer {
             };
             sql.append(" AND t.difficulty = ").append(difficulty);
         }
-        if(testSearch.getPage() == null || testSearch.getPage() < 1) {
-            testSearch.setPage(1);
+        if(pageable != null) {
+            sql.append(" LIMIT ").append(pageable.getPageSize()).append(" OFFSET ").append(pageable.getOffset());
         }
-        Pageable pageable = PageRequest.of(testSearch.getPage() - 1, 6);
-        sql.append(" LIMIT ").append(pageable.getPageSize()).append(" OFFSET ").append(pageable.getOffset());
         Query query = entityManager.createNativeQuery(sql.toString(), TestEntity.class);
         return query.getResultList();
     }

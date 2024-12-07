@@ -32,8 +32,10 @@ public class UserConvertor implements IConvertor<UserDTO, UserEntity, UserRespon
             throw new DataInvalidException("Password and repeat password is invalid!");
         }
         UserEntity userEntity = modelMapper.map(dto, UserEntity.class);
-        if (userEntity.getDateOfBirth().after(new Date(System.currentTimeMillis()))) {
-            throw new DataInvalidException("Date of birth is invalid!");
+        if(dto.getDateOfBirth() != null) {
+            if (userEntity.getDateOfBirth().after(new Date(System.currentTimeMillis()))) {
+                throw new DataInvalidException("Date of birth is invalid!");
+            }
         }
         if (dto.getStatus() == null || !StringUtils.isNotBlank(dto.getStatus())) {
             userEntity.setStatus(UserStatus.ACTIVE);
@@ -59,12 +61,14 @@ public class UserConvertor implements IConvertor<UserDTO, UserEntity, UserRespon
     public UserResponse entityToResponse(UserEntity entity) {
         UserResponse response = modelMapper.map(entity, UserResponse.class);
         response.setFullName(String.join(" ", entity.getFirstname(), entity.getLastname()));
-        try {
-            SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-            String dateOfBirth = formatter.format(new java.util.Date(entity.getDateOfBirth().getTime()));
-            response.setDateOfBirth(dateOfBirth);
-        } catch (Exception exception) {
-            throw new ServerErrorException(exception.getMessage());
+        if(entity.getDateOfBirth() != null) {
+            try {
+                SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+                String dateOfBirth = formatter.format(new java.util.Date(entity.getDateOfBirth().getTime()));
+                response.setDateOfBirth(dateOfBirth);
+            } catch (Exception exception) {
+                throw new ServerErrorException(exception.getMessage());
+            }
         }
         response.setRoles(entity.getRoles().stream().map(RoleEntity::getCode).toList());
         return response;

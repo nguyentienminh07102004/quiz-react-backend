@@ -10,10 +10,13 @@ import com.ptitb22dccn539.quiz.Repositoty.ITestDetailRepository;
 import com.ptitb22dccn539.quiz.Service.ITestDetailService;
 import com.ptitb22dccn539.quiz.Service.ITestService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -47,5 +50,14 @@ public class TestDetailServiceImpl implements ITestDetailService {
         TestDetailEntity testDetail = testDetailRepository.findById(id)
                 .orElseThrow(() -> new DataInvalidException("Test detail not found!"));
         return testDetailConvertor.entityToResponse(testDetail);
+    }
+
+    @Override
+    public List<TestDetailResponse> findTopUserHighScore(Integer maxTop, String testId) {
+        Pageable pageable = PageRequest.of(0, maxTop);
+        List<TestDetailEntity> list = testDetailRepository.findTopByOrderByScoreAscAndTotalTimeDesc(testId, pageable);
+        return list.stream()
+                .map(testDetailConvertor::entityToResponse)
+                .toList();
     }
 }

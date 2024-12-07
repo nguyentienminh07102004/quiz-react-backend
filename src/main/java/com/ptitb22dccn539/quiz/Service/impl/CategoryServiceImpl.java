@@ -1,10 +1,11 @@
 package com.ptitb22dccn539.quiz.Service.impl;
 
 import com.ptitb22dccn539.quiz.Convertors.CategoryConvertor;
+import com.ptitb22dccn539.quiz.Convertors.MapIfNull;
 import com.ptitb22dccn539.quiz.Exceptions.DataInvalidException;
+import com.ptitb22dccn539.quiz.Exceptions.ServerErrorException;
 import com.ptitb22dccn539.quiz.Model.DTO.CategoryDTO;
 import com.ptitb22dccn539.quiz.Model.Entity.CategoryEntity;
-import com.ptitb22dccn539.quiz.Model.Request.Category.CategoryRating;
 import com.ptitb22dccn539.quiz.Model.Response.CategoryResponse;
 import com.ptitb22dccn539.quiz.Repositoty.ICategoryRepository;
 import com.ptitb22dccn539.quiz.Service.ICategoryService;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.text.DecimalFormat;
 import java.util.List;
 
 @Service
@@ -26,19 +26,27 @@ import java.util.List;
 public class CategoryServiceImpl implements ICategoryService {
     private final ICategoryRepository categoryRepository;
     private final CategoryConvertor categoryConvertor;
-    private final DecimalFormat format;
+    private final MapIfNull<CategoryEntity> mapIfNull;
 
     @Override
     @Transactional
     public CategoryResponse save(CategoryDTO categoryDTO) {
+        CategoryEntity saved = null;
         if (categoryDTO.getCode() != null) {
-            categoryRepository.findById(categoryDTO.getCode())
+            saved = categoryRepository.findById(categoryDTO.getCode())
                     .orElseThrow(() -> new DataInvalidException("Category not found!"));
         }
         CategoryEntity category = categoryConvertor.dtoToEntity(categoryDTO);
         if(categoryDTO.getCode() == null) {
             categoryRepository.findByCode(category.getCode())
                     .ifPresent(getByCode -> category.setCode(String.join("-", category.getCode(), new Date(System.currentTimeMillis()).toString())));
+        }
+        if(saved != null) {
+            try {
+                mapIfNull.mapIfNull(saved, category);
+            } catch (IllegalStateException | IllegalAccessException exception) {
+                throw new ServerErrorException("Server lỗi!");
+            }
         }
         CategoryEntity savedCategory = categoryRepository.save(category);
         return categoryConvertor.entityToResponse(savedCategory);
@@ -78,16 +86,5 @@ public class CategoryServiceImpl implements ICategoryService {
         return list.stream()
                 .map(categoryConvertor::entityToResponse)
                 .toList();
-    }
-
-    @Override
-    public CategoryResponse rating(CategoryRating categoryRating) {
-        String categoryCode = categoryRating.getCategoryCode();
-        CategoryEntity category = this.getCategoryEntityByCode(categoryCode);
-        Double rating = category.getRating() * category.getNumsOfRatings() + categoryRating.getRating();
-        category.setNumsOfRatings(category.getNumsOfRatings() + 1);
-        category.setRating(Double.valueOf(format.format(rating / category.getNumsOfRatings())));
-        CategoryEntity savedCategory = categoryRepository.save(category);
-        return categoryConvertor.entityToResponse(savedCategory);
     }
 }
