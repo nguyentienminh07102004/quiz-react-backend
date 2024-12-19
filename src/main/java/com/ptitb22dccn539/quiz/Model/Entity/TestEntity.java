@@ -9,9 +9,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 
 import java.util.List;
 
@@ -28,22 +31,25 @@ public class TestEntity extends BaseEntity {
     private String title;
     @Column(name = "description", columnDefinition = "LONGTEXT")
     private String description;
-    @Column(name = "rating")
-    private Double rating;
-    @Column(name = "nums_of_rating")
-    private Long numsOfRatings;
     @Column(name = "difficulty")
     private Difficulty difficulty;
 
     @ManyToMany
     @JoinTable(name = "question_test",
-    joinColumns = @JoinColumn(name = "test_id"),
-    inverseJoinColumns = @JoinColumn(name = "question_id"))
+            joinColumns = @JoinColumn(name = "test_id"),
+            inverseJoinColumns = @JoinColumn(name = "question_id"))
     private List<QuestionEntity> questions;
 
     @ManyToMany
     @JoinTable(name = "test_category",
-    joinColumns = @JoinColumn(name = "test_id"),
-    inverseJoinColumns = @JoinColumn(name = "category_code"))
+            joinColumns = @JoinColumn(name = "test_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_code"))
     private List<CategoryEntity> categories;
+
+    @OneToMany(mappedBy = "test", orphanRemoval = true)
+    @Cascade(value = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
+    private List<TestRatingEntity> testRatings;
+
+    @OneToMany(mappedBy = "test", orphanRemoval = true)
+    private List<TestDetailEntity> testDetailEntities;
 }

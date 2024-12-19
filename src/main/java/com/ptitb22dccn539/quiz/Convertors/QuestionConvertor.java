@@ -19,14 +19,13 @@ public class QuestionConvertor implements IConvertor<QuestionDTO, QuestionEntity
     private final ModelMapper modelMapper;
     private final ICategoryService categoryService;
     private final AnswerConvertor answerConvertor;
+    private final CategoryConvertor categoryConvertor;
 
     @Override
     public QuestionEntity dtoToEntity(QuestionDTO dto) {
         QuestionEntity questionEntity = modelMapper.map(dto, QuestionEntity.class);
-        if(!dto.getCategoryCode().isBlank()) {
-            CategoryEntity category = categoryService.getCategoryEntityByCode(dto.getCategoryCode());
-            questionEntity.setCategory(category);
-        }
+        CategoryEntity category = categoryService.getCategoryEntityByCode(dto.getCategory());
+        questionEntity.setCategory(category);
         List<AnswerEntity> answers = dto.getAnswers().stream()
                 .map(item -> answerConvertor.dtoToEntity(item, questionEntity))
                 .toList();
@@ -37,10 +36,10 @@ public class QuestionConvertor implements IConvertor<QuestionDTO, QuestionEntity
     @Override
     public QuestionResponse entityToResponse(QuestionEntity entity) {
         QuestionResponse questionResponse = modelMapper.map(entity, QuestionResponse.class);
-        if(entity.getCategory() != null) {
-            questionResponse.setCategory(entity.getCategory().getName());
+        if (entity.getCategory() != null) {
+            questionResponse.setCategory(categoryConvertor.entityToResponse(entity.getCategory()));
         }
-        if(entity.getAnswers() != null) {
+        if (entity.getAnswers() != null) {
             List<AnswerResponse> answers = entity.getAnswers().stream()
                     .map(answerConvertor::entityToResponse)
                     .toList();

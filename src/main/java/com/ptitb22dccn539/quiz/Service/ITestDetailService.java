@@ -9,4 +9,5 @@ public interface ITestDetailService {
     TestDetailResponse save(TestDetailDTO testDetailDTO);
     TestDetailResponse getById(String id);
     List<TestDetailResponse> findTopUserHighScore(Integer maxTop, String testId);
+    List<TestDetailResponse> findByTestId(String testId);
 }

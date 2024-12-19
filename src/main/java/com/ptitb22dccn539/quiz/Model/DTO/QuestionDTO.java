@@ -20,7 +20,9 @@ public class QuestionDTO {
     private String id;
     @NotBlank(message = "Question content not null or empty!")
     private String content;
-    private String categoryCode;
+    @NotNull
+    @NotBlank
+    private String category;
     private String title;
     private String shortDescription;
     @NotNull

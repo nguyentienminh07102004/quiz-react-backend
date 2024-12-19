@@ -60,4 +60,12 @@ public class TestDetailServiceImpl implements ITestDetailService {
                 .map(testDetailConvertor::entityToResponse)
                 .toList();
     }
+
+    @Override
+    public List<TestDetailResponse> findByTestId(String testId) {
+        List<TestDetailEntity> list = testDetailRepository.findByTest_Id(testId);
+        return list.stream()
+                .map(testDetailConvertor::entityToResponse)
+                .toList();
+    }
 }

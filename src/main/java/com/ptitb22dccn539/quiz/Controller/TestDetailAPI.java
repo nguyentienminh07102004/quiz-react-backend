@@ -55,4 +55,14 @@ public class TestDetailAPI {
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
     }
+
+    @GetMapping(value = "/tests/{testId}")
+    public ResponseEntity<APIResponse> getTestDetailByTestId(@PathVariable String testId) {
+        List<TestDetailResponse> list = testDetailService.findByTestId(testId);
+        APIResponse response = APIResponse.builder()
+                .message("SUCCESS")
+                .response(list)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }

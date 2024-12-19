@@ -60,10 +60,9 @@ public class UserConvertor implements IConvertor<UserDTO, UserEntity, UserRespon
     @Override
     public UserResponse entityToResponse(UserEntity entity) {
         UserResponse response = modelMapper.map(entity, UserResponse.class);
-        response.setFullName(String.join(" ", entity.getFirstname(), entity.getLastname()));
         if(entity.getDateOfBirth() != null) {
             try {
-                SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+                SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
                 String dateOfBirth = formatter.format(new java.util.Date(entity.getDateOfBirth().getTime()));
                 response.setDateOfBirth(dateOfBirth);
             } catch (Exception exception) {

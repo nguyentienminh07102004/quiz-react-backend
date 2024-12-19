@@ -4,6 +4,7 @@ import com.ptitb22dccn539.quiz.Model.DTO.TestDTO;
 import com.ptitb22dccn539.quiz.Model.Request.Test.TestRating;
 import com.ptitb22dccn539.quiz.Model.Request.Test.TestSearch;
 import com.ptitb22dccn539.quiz.Model.Response.APIResponse;
+import com.ptitb22dccn539.quiz.Model.Response.TestRatingResponse;
 import com.ptitb22dccn539.quiz.Model.Response.TestResponse;
 import com.ptitb22dccn539.quiz.Service.ITestService;
 import jakarta.annotation.security.PermitAll;
@@ -13,10 +14,12 @@ import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -53,7 +56,7 @@ public class TestAPI {
                 .build();
     }
 
-    @GetMapping(value = "/")
+    @GetMapping(value = "/condition")
     @ResponseStatus(value = HttpStatus.OK)
     @PermitAll
     public APIResponse getAllTests(@ModelAttribute TestSearch testSearch) {
@@ -64,16 +67,6 @@ public class TestAPI {
                 .build();
     }
 
-    @PostMapping(value = "/rate")
-    public ResponseEntity<APIResponse> rating(@Valid @RequestBody TestRating testRating) {
-        TestResponse response = testService.rating(testRating);
-        APIResponse apiResponse = APIResponse.builder()
-                .message("SUCCESS")
-                .response(response)
-                .build();
-        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
-    }
-
     @GetMapping(value = "/related/{testId}")
     public ResponseEntity<APIResponse> getTestRelated(@RequestParam List<String> categories,
                                                       @PathVariable String testId) {
@@ -81,6 +74,36 @@ public class TestAPI {
         APIResponse response = APIResponse.builder()
                 .message("SUCCESS")
                 .response(list)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping(value = "/rate/{testId}")
+    @PreAuthorize(value = "hasRole('USER')")
+    public ResponseEntity<APIResponse> getRatingByTestId(@PathVariable String testId) {
+        TestRatingResponse testRatingResponse = testService.getRatingByTestId(testId);
+        APIResponse response = APIResponse.builder()
+                .message("SUCCESS")
+                .response(testRatingResponse)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PutMapping(value = "/rate")
+    public ResponseEntity<APIResponse> ratingTest(@Valid @RequestBody TestRating testRating) {
+        testService.rating(testRating);
+        APIResponse response = APIResponse.builder()
+                .message("SUCCESS")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @DeleteMapping(value = "/{ids}")
+    @PreAuthorize(value = "hasRole('ADMIN')")
+    public ResponseEntity<APIResponse> deleteTest(@PathVariable List<String> ids) {
+       testService.deleteByIds(ids);
+        APIResponse response = APIResponse.builder()
+                .message("SUCCESS")
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

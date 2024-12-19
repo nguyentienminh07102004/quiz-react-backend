@@ -13,4 +13,6 @@ public interface ITestDetailRepository extends JpaRepository<TestDetailEntity, S
     @Query(value = "SELECT t FROM TestDetailEntity t WHERE t.test.id = :testId ORDER BY t.score DESC, t.totalTime ASC")
     List<TestDetailEntity> findTopByOrderByScoreAscAndTotalTimeDesc(String testId, Pageable pageable);
     Long countByCreatedBy(String createdBy);
+    List<TestDetailEntity> findByCreatedBy(String createdBy);
+    List<TestDetailEntity> findByTest_Id(String id);
 }

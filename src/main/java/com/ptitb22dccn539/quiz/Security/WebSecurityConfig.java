@@ -51,12 +51,12 @@ public class WebSecurityConfig {
                 String.format("/%s/categories/all", API_PREFIX),
                 String.format("/%s/categories/", API_PREFIX),
                 String.format("/%s/tests/all", API_PREFIX),
-                String.format("/%s/tests/", API_PREFIX),
+                String.format("/%s/tests/condition", API_PREFIX),
                 String.format("/%s/mail/", API_PREFIX),
                 String.format("/%s/test-detail/max-top/", API_PREFIX),
                 String.format("/%s/tests/related/", API_PREFIX),
                 "/oauth2/authorization/google",
-                "/oauth2/authorization/github"
+                "/oauth2/authorization/github",
         };
         URL_PUBLIC_POST = new String[]{
                 "/%s/users/login".formatted(API_PREFIX),
@@ -83,6 +83,7 @@ public class WebSecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/%s/test-detail/{id}".formatted(API_PREFIX)).access(new WebExpressionAuthorizationManager("not isAnonymous()"))
                                 .requestMatchers(RegexRequestMatcher.regexMatcher(HttpMethod.PUT, "/%s/(categories|questions|tests)/rate".formatted(API_PREFIX))).access(new WebExpressionAuthorizationManager("not isAnonymous()"))
                                 .requestMatchers(HttpMethod.GET, "/%s/test-detail/max-top/**".formatted(API_PREFIX)).permitAll()
+                                .requestMatchers(HttpMethod.GET, "/%s/test-detail/tests/{testId}".formatted(API_PREFIX)).permitAll()
                                 .requestMatchers("/%s/questions**".formatted(API_PREFIX)).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/%s/tests/**".formatted(API_PREFIX)).permitAll()
                                 .anyRequest().authenticated())
@@ -166,6 +167,8 @@ public class WebSecurityConfig {
             for (String uri : URL_PUBLIC_POST) {
                 if (request.getRequestURI().contains(uri) && request.getMethod().equals("POST"))
                     return authentication -> {
+
+                        System.out.println(authentication);
                         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken("Anonymous", null, List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
                         token.setAuthenticated(false);
                         return token;
@@ -174,6 +177,7 @@ public class WebSecurityConfig {
             for (String uri : URL_PUBLIC_GET) {
                 if (request.getRequestURI().contains(uri) && request.getMethod().equals("GET"))
                     return authentication -> {
+                        String tokenUser = (String) authentication.getPrincipal();
                         UsernamePasswordAuthenticationToken token =
                                 new UsernamePasswordAuthenticationToken("Anonymous", null,
                                         List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));

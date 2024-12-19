@@ -7,32 +7,25 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
-
-import java.util.List;
 
 @Entity
-@Table(name = "test_detail")
+@Table(name = "test_rating")
 @Getter
 @Setter
-public class TestDetailEntity extends BaseEntity {
+public class TestRatingEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
     private String id;
-    @Column(name = "score")
-    private Double score;
+    @Column(name = "rating")
+    private Double rating;
     @ManyToOne
     @JoinColumn(name = "test_id")
     private TestEntity test;
-    @Column(name = "total_time")
-    private Long totalTime;
-    @OneToMany(mappedBy = "testDetail",orphanRemoval = true)
-    @Cascade(value = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE })
-    private List<AnswerSelectedEntity> answerSelected;
+    @ManyToOne
+    @JoinColumn(name = "user_email", referencedColumnName = "email")
+    private UserEntity user;
 }

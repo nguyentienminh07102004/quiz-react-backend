@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,8 +73,7 @@ public class CategoryServiceImpl implements ICategoryService {
     @Override
     public PagedModel<CategoryResponse> getAllCategory(Integer page) {
         if (page == null) page = 1;
-        Sort sort = Sort.by("rating");
-        Pageable pageable = PageRequest.of(page - 1, 5, sort);
+        Pageable pageable = PageRequest.of(page - 1, 5);
         Page<CategoryEntity> list = categoryRepository.findAll(pageable);
         return new PagedModel<>(list.map(categoryConvertor::entityToResponse));
     }

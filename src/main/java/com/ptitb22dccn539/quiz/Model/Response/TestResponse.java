@@ -18,9 +18,10 @@ public class TestResponse {
     private String id;
     private String title;
     private String description;
-    private Double rate;
-    private Long numsOfRatings;
+    private List<TestRatingResponse> ratingResponses;
     private List<QuestionResponse> questionResponses;
     private Difficulty difficulty;
     private List<CategoryResponse> categories;
+    private Double rate;
+    private List<TestDetailResponse> testDetailResponses;
 }

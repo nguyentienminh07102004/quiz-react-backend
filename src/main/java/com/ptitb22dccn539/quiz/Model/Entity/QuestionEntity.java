@@ -14,6 +14,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.List;
 
@@ -38,9 +40,10 @@ public class QuestionEntity extends BaseEntity {
     private CategoryEntity category;
 
     @OneToMany(mappedBy = "question", orphanRemoval = true)
-    @Cascade(value = { CascadeType.PERSIST, CascadeType.MERGE })
+    @Cascade(value = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE })
     private List<AnswerEntity> answers;
 
     @ManyToMany(mappedBy = "questions")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<TestEntity> tests;
 }

@@ -3,7 +3,6 @@ package com.ptitb22dccn539.quiz.Service;
 import com.ptitb22dccn539.quiz.Model.DTO.AnswerDTO;
 import com.ptitb22dccn539.quiz.Model.DTO.QuestionDTO;
 import com.ptitb22dccn539.quiz.Model.Entity.QuestionEntity;
-import com.ptitb22dccn539.quiz.Model.Request.Question.QuestionRating;
 import com.ptitb22dccn539.quiz.Model.Response.QuestionResponse;
 import org.springframework.data.web.PagedModel;
 

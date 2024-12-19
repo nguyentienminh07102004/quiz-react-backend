@@ -17,7 +17,7 @@ public class QuestionResponse {
     private String id;
     private String title;
     private String shortDescription;
-    private String category;
+    private CategoryResponse category;
     private String content;
     private List<AnswerResponse> answers;
 }

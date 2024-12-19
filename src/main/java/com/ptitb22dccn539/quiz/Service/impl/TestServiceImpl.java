@@ -1,15 +1,21 @@
 package com.ptitb22dccn539.quiz.Service.impl;
 
 import com.ptitb22dccn539.quiz.Convertors.TestConvertor;
+import com.ptitb22dccn539.quiz.Convertors.TestRatingConvertor;
 import com.ptitb22dccn539.quiz.Exceptions.DataInvalidException;
 import com.ptitb22dccn539.quiz.Model.DTO.TestDTO;
 import com.ptitb22dccn539.quiz.Model.Entity.CategoryEntity;
 import com.ptitb22dccn539.quiz.Model.Entity.QuestionEntity;
+import com.ptitb22dccn539.quiz.Model.Entity.TestDetailEntity;
 import com.ptitb22dccn539.quiz.Model.Entity.TestEntity;
+import com.ptitb22dccn539.quiz.Model.Entity.TestRatingEntity;
 import com.ptitb22dccn539.quiz.Model.Request.Test.TestRating;
 import com.ptitb22dccn539.quiz.Model.Request.Test.TestSearch;
+import com.ptitb22dccn539.quiz.Model.Response.TestRatingResponse;
 import com.ptitb22dccn539.quiz.Model.Response.TestResponse;
 import com.ptitb22dccn539.quiz.Repositoty.ITestDetailRepository;
+import com.ptitb22dccn539.quiz.Repositoty.ITestRatingRepository;
+import com.ptitb22dccn539.quiz.Repositoty.IUserRepository;
 import com.ptitb22dccn539.quiz.Repositoty.TestRepository;
 import com.ptitb22dccn539.quiz.Service.ITestService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +40,9 @@ public class TestServiceImpl implements ITestService {
     private final TestConvertor testConvertor;
     private final DecimalFormat format;
     private final ITestDetailRepository testDetailRepository;
+    private final IUserRepository userRepository;
+    private final TestRatingConvertor testRatingConvertor;
+    private final ITestRatingRepository testRatingRepository;
 
     @Override
     @Transactional
@@ -54,8 +64,22 @@ public class TestServiceImpl implements ITestService {
     @Override
     @Transactional
     public void deleteByIds(List<String> ids) {
-        ids.forEach(this::getTestEntityById);
-        testRepository.deleteAllById(ids);
+        for(String id : ids) {
+            TestEntity test = testRepository.findById(id)
+                    .orElseThrow(() -> new DataInvalidException("Test not found!"));
+            // delete rating
+            List<TestRatingEntity> testRatings = test.getTestRatings();
+            for(TestRatingEntity ratingEntity : testRatings) {
+                ratingEntity.setTest(null);
+            }
+            test.getTestRatings().clear();
+            // delete test detail by user
+            for(TestDetailEntity testDetail : test.getTestDetailEntities()) {
+                testDetail.setTest(null);
+            }
+            test.getTestDetailEntities().clear();
+            testRepository.delete(test);
+        }
     }
 
     @Override
@@ -80,7 +104,7 @@ public class TestServiceImpl implements ITestService {
 
     @Override
     public PagedModel<TestResponse> getAllTests(TestSearch testSearch) {
-        if(testSearch.getPage() == null || testSearch.getPage() < 1) testSearch.setPage(1);
+        if (testSearch.getPage() == null || testSearch.getPage() < 1) testSearch.setPage(1);
         Pageable pageable = PageRequest.of(testSearch.getPage() - 1, 6);
         List<TestEntity> testEntities = testRepository.findTest(testSearch, pageable);
         List<TestResponse> listResponse = testEntities.stream()
@@ -90,18 +114,30 @@ public class TestServiceImpl implements ITestService {
         return new PagedModel<>(page);
     }
 
-    public TestResponse rating(TestRating testRating) {
+    public void rating(TestRating testRating) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Long counter = testDetailRepository.countByCreatedBy(email);
-        if(counter <= 0) {
+        if (counter <= 0) {
             throw new DataInvalidException("You must play first");
         }
         TestEntity testEntity = this.getTestEntityById(testRating.getTestId());
-        Double rating = testEntity.getRating() * testEntity.getNumsOfRatings() + testRating.getRating();
-        testEntity.setNumsOfRatings(testEntity.getNumsOfRatings() + 1);
-        testEntity.setRating(Double.valueOf(format.format(rating / testEntity.getNumsOfRatings())));
-        TestEntity response = testRepository.save(testEntity);
-        return testConvertor.entityToResponse(response);
+        List<TestRatingEntity> listTestRating = testEntity.getTestRatings();
+        listTestRating.stream()
+                .filter(test -> test.getUser().getEmail().equals(email))
+                .findFirst()
+                .or(() -> {
+                    TestRatingEntity rating = new TestRatingEntity();
+                    rating.setUser(userRepository.findByEmail(email));
+                    rating.setTest(testEntity);
+                    return Optional.of(rating);
+                })
+                .ifPresent((testRatingEntity) -> {
+                    testRatingEntity.setRating(Double.valueOf(format.format(testRating.getRating())));
+                    if (testRatingEntity.getId() == null) {
+                        testEntity.getTestRatings().add(testRatingEntity);
+                    }
+                    testRepository.save(testEntity);
+                });
     }
 
     @Override
@@ -119,4 +155,21 @@ public class TestServiceImpl implements ITestService {
                 .map(testConvertor::entityToResponse)
                 .toList();
     }
+
+    @Override
+    public TestRatingResponse getRatingByTestId(String testId) {
+        TestEntity test = this.getTestEntityById(testId);
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        TestRatingEntity testRatingEntity = testRatingRepository.findByUser_EmailAndTest_Id(email, testId)
+                .orElseGet(() -> {
+                    TestRatingEntity testRating = new TestRatingEntity();
+                    testRating.setRating(0.0);
+                    testRating.setUser(userRepository.findByEmail(email));
+                    testRating.setTest(test);
+                    return testRating;
+                });
+        return testRatingConvertor.entityToResponse(testRatingEntity);
+    }
+
+
 }

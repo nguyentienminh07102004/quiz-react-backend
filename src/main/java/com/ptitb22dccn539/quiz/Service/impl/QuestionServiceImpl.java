@@ -7,8 +7,8 @@ import com.ptitb22dccn539.quiz.Exceptions.DataInvalidException;
 import com.ptitb22dccn539.quiz.Model.DTO.AnswerDTO;
 import com.ptitb22dccn539.quiz.Model.DTO.QuestionDTO;
 import com.ptitb22dccn539.quiz.Model.Entity.AnswerEntity;
+import com.ptitb22dccn539.quiz.Model.Entity.AnswerSelectedEntity;
 import com.ptitb22dccn539.quiz.Model.Entity.QuestionEntity;
-import com.ptitb22dccn539.quiz.Model.Request.Question.QuestionRating;
 import com.ptitb22dccn539.quiz.Model.Response.QuestionResponse;
 import com.ptitb22dccn539.quiz.Repositoty.IAnswerRepository;
 import com.ptitb22dccn539.quiz.Repositoty.IQuestionRepository;
@@ -21,7 +21,6 @@ import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.DecimalFormat;
 import java.util.List;
 
 @Service
@@ -31,7 +30,6 @@ public class QuestionServiceImpl implements IQuestionService {
     private final QuestionConvertor questionConvertor;
     private final AnswerConvertor answerConvertor;
     private final IAnswerRepository answerRepository;
-    private final DecimalFormat format;
 
     @Override
     @Transactional
@@ -59,9 +57,21 @@ public class QuestionServiceImpl implements IQuestionService {
     @Override
     @Transactional
     public void deleteByIds(List<String> ids) {
-        ids.forEach(id -> questionRepository.findById(id)
-                .orElseThrow(() -> new DataInvalidException("Question not found!")));
-        questionRepository.deleteAllById(ids);
+        ids.forEach(id -> {
+            QuestionEntity question = questionRepository.findById(id)
+                    .orElseThrow(() -> new DataInvalidException("Question not found!"));
+            // delete answer selected
+            List<AnswerEntity> answerEntities = question.getAnswers();
+            answerEntities.forEach(answerEntity -> {
+                for(AnswerSelectedEntity answerSelectedEntity : answerEntity.getAnswerSelectedEntities()) {
+                    answerSelectedEntity.setAnswer(null);
+                }
+                answerEntity.getAnswerSelectedEntities().clear();
+                answerEntity.setQuestion(null);
+            });
+            question.getAnswers().clear();
+            questionRepository.deleteById(id);
+        });
     }
 
     @Override

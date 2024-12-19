@@ -9,6 +9,8 @@ import java.util.List;
 @Getter
 @Setter
 public class UserUpdate {
+    private String id;
+    private String email;
     private String firstname;
     private String lastname;
     private String address;

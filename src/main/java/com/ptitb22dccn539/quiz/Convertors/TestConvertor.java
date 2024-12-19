@@ -3,8 +3,10 @@ package com.ptitb22dccn539.quiz.Convertors;
 import com.ptitb22dccn539.quiz.Model.DTO.TestDTO;
 import com.ptitb22dccn539.quiz.Model.Entity.QuestionEntity;
 import com.ptitb22dccn539.quiz.Model.Entity.TestEntity;
+import com.ptitb22dccn539.quiz.Model.Entity.TestRatingEntity;
 import com.ptitb22dccn539.quiz.Model.Response.CategoryResponse;
 import com.ptitb22dccn539.quiz.Model.Response.QuestionResponse;
+import com.ptitb22dccn539.quiz.Model.Response.TestRatingResponse;
 import com.ptitb22dccn539.quiz.Model.Response.TestResponse;
 import com.ptitb22dccn539.quiz.Service.IQuestionService;
 import com.ptitb22dccn539.quiz.enums.Difficulty;
@@ -12,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -21,6 +25,8 @@ public class TestConvertor implements IConvertor<TestDTO, TestEntity, TestRespon
     private final IQuestionService questionService;
     private final QuestionConvertor questionConvertor;
     private final CategoryConvertor categoryConvertor;
+    private final DecimalFormat decimalFormat;
+    private final TestRatingConvertor testRatingConvertor;
 
     @Override
     public TestEntity dtoToEntity(TestDTO dto) {
@@ -28,10 +34,6 @@ public class TestConvertor implements IConvertor<TestDTO, TestEntity, TestRespon
         List<QuestionEntity> questions = dto.getQuestionIds().stream()
                 .map(questionService::getQuestionEntityById)
                 .toList();
-        if (dto.getId() == null) {
-            testEntity.setRating(0.0);
-            testEntity.setNumsOfRatings(0L);
-        }
         Difficulty difficulty = Difficulty.valueOf(dto.getDifficulty());
         testEntity.setDifficulty(difficulty);
         testEntity.setQuestions(questions);
@@ -41,8 +43,6 @@ public class TestConvertor implements IConvertor<TestDTO, TestEntity, TestRespon
     @Override
     public TestResponse entityToResponse(TestEntity entity) {
         TestResponse testResponse = modelMapper.map(entity, TestResponse.class);
-        if (entity.getNumsOfRatings() == 0) testResponse.setRate(0.0);
-        else testResponse.setRate(entity.getRating());
         List<QuestionResponse> questionResponses = entity.getQuestions().stream()
                 .map(questionConvertor::entityToResponse)
                 .toList();
@@ -51,6 +51,17 @@ public class TestConvertor implements IConvertor<TestDTO, TestEntity, TestRespon
                 .map(categoryConvertor::entityToResponse)
                 .toList();
         testResponse.setCategories(categories);
+        // rating
+        if(entity.getTestRatings() != null && !entity.getTestRatings().isEmpty()) {
+            List<TestRatingResponse> list = new ArrayList<>();
+            Double rate = 0.0;
+            for(TestRatingEntity testRating : entity.getTestRatings()) {
+                list.add(testRatingConvertor.entityToResponse(testRating));
+                rate += testRating.getRating();
+            }
+            testResponse.setRate(Double.parseDouble(decimalFormat.format(rate / entity.getTestRatings().size())));
+            testResponse.setRatingResponses(list);
+        }
         return testResponse;
     }
 }

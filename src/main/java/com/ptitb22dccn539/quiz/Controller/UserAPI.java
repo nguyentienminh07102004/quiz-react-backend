@@ -1,6 +1,7 @@
 package com.ptitb22dccn539.quiz.Controller;
 
 import com.ptitb22dccn539.quiz.Model.DTO.UserDTO;
+import com.ptitb22dccn539.quiz.Model.Request.User.UserChangePassword;
 import com.ptitb22dccn539.quiz.Model.Request.User.UserLoginRequest;
 import com.ptitb22dccn539.quiz.Model.Request.User.UserLoginWithGithub;
 import com.ptitb22dccn539.quiz.Model.Request.User.UserLoginWithGoogle;
@@ -46,7 +47,7 @@ public class UserAPI {
 
     @PutMapping(value = "/")
     @ResponseStatus(value = HttpStatus.OK)
-    @PreAuthorize(value = "hasRole('ADMIN') || hasRole('USER')")
+    @PreAuthorize(value = "not isAnonymous()")
     public APIResponse updateUser(@Valid @RequestBody UserUpdate userUpdate) {
         UserResponse userResponse = userService.updateUser(userUpdate);
         return APIResponse.builder()
@@ -73,6 +74,15 @@ public class UserAPI {
         return APIResponse.builder()
                 .message("DELETE SUCCESS")
                 .build();
+    }
+
+    @PostMapping(value = "/change-password")
+    public ResponseEntity<APIResponse> changePassword(@Valid @RequestBody UserChangePassword userChangePassword) {
+        userService.changePassword(userChangePassword);
+        APIResponse response = APIResponse.builder()
+                .message("SUCCESS")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping(value = "/{id}")
